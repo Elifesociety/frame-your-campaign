@@ -3,7 +3,7 @@ import { Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import campaignFrame from "@/assets/campaign-frame.png";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FrameEditorProps {
   photoFile: File;
@@ -14,8 +14,38 @@ export const FrameEditor = ({ photoFile, onBack }: FrameEditorProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isProcessing, setIsProcessing] = useState(true);
   const [finalImageUrl, setFinalImageUrl] = useState<string>("");
+  const [frameUrl, setFrameUrl] = useState<string>("");
+
+  // Fetch active frame from database
+  useEffect(() => {
+    const fetchFrame = async () => {
+      const { data, error } = await supabase
+        .from("frames")
+        .select("image_url")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching frame:", error);
+        toast.error("Failed to load frame");
+        return;
+      }
+
+      if (data) {
+        setFrameUrl(data.image_url);
+      } else {
+        toast.error("No active frame available. Please contact admin.");
+      }
+    };
+
+    fetchFrame();
+  }, []);
 
   useEffect(() => {
+    if (!frameUrl) return;
+
     const processImage = async () => {
       if (!canvasRef.current) return;
 
@@ -32,8 +62,8 @@ export const FrameEditor = ({ photoFile, onBack }: FrameEditorProps) => {
         // Load user photo
         const userPhoto = await loadImage(URL.createObjectURL(photoFile));
         
-        // Load frame
-        const frame = await loadImage(campaignFrame);
+        // Load frame from database
+        const frame = await loadImage(frameUrl);
 
         // Draw user photo (fit to square)
         const scale = Math.max(size / userPhoto.width, size / userPhoto.height);
@@ -68,7 +98,7 @@ export const FrameEditor = ({ photoFile, onBack }: FrameEditorProps) => {
     };
 
     processImage();
-  }, [photoFile]);
+  }, [photoFile, frameUrl]);
 
   const loadImage = (src: string): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
