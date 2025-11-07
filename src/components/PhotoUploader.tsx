@@ -67,7 +67,7 @@ export const PhotoUploader = ({ onPhotoSelect }: PhotoUploaderProps) => {
           
           <div className="space-y-2">
             <h3 className="text-xl font-semibold">
-              {isDragging ? "Drop your photo here" : "Upload Your Photo ഫോട്ടോ ചേർക്കാൻ ഇവിടെ ക്ലിക്ക് ചെയ്യുക "}
+              {isDragging ? "Drop your photo here" : "ഫോട്ടോ ചേർക്കാൻ ഇവിടെ ക്ലിക്ക് ചെയ്യുക "}
             </h3>
             <p className="text-muted-foreground">
               Drag and drop or click to browse
